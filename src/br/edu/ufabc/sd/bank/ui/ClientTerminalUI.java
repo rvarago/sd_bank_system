@@ -3,15 +3,18 @@ package br.edu.ufabc.sd.bank.ui;
 import java.math.BigDecimal;
 import java.util.Scanner;
 
-import br.edu.ufabc.sd.bank.Bank;
 import br.edu.ufabc.sd.bank.BankClientService;
 import br.edu.ufabc.sd.bank.BankClientServiceImpl;
+import br.edu.ufabc.sd.bank.BankManager;
 import br.edu.ufabc.sd.bank.account.Account;
+import br.edu.ufabc.sd.bank.dao.AccountDAO;
+import br.edu.ufabc.sd.bank.dao.AccountDAOImpl;
 
-public class Main {
+public class ClientTerminalUI {
 
-	private static final Bank bank = new Bank();
 	private BankClientService bankClientService = new BankClientServiceImpl();
+	private AccountDAO accountDAO = new AccountDAOImpl();
+	private BankManager bankManager = new BankManager(this.bankClientService, this.accountDAO);
 
 	private void execute() {
 		Scanner sc = null;
@@ -19,11 +22,11 @@ public class Main {
 			sc = new Scanner(System.in);
 			String nextOperation = null;
 			do {
-				System.out.println("1 - Listar\n2 - Criar\n3 - Recuperar\n4 - Sair");
+				System.out.println("1 - Listar\n2 - Criar\n3 - Recuperar\n4 - Apagar\n5 - Sair");
 				nextOperation = sc.nextLine();
 				switch (nextOperation) {
 				case "1":
-					for (Account account : Main.bank.getAccounts()) {
+					for (Account account : this.bankManager.getAccounts()) {
 						System.out.println(account);
 					}
 					break;
@@ -33,12 +36,12 @@ public class Main {
 					System.out.println("Saldo Inicial (#.#):");
 					BigDecimal initialBalance = null;
 					initialBalance = BigDecimal.valueOf(Double.parseDouble(sc.nextLine()));
-					Main.bank.createAccount(owner, initialBalance);
+					this.bankManager.createAccount(owner, initialBalance);
 					break;
 				case "3":
 					System.out.print("Código:");
 					Long code = Long.valueOf(sc.nextLine());
-					Account account = bank.retriveAccount(code);
+					Account account = this.bankManager.retriveAccount(code);
 					String accountOption = null;
 					do {
 						System.out.println(
@@ -64,20 +67,25 @@ public class Main {
 							Long codeSink = Long.valueOf(sc.nextLine());
 							System.out.println("Quantia:");
 							amount = BigDecimal.valueOf(Double.parseDouble(sc.nextLine()));
-							this.bankClientService.transfer(account, bank.retriveAccount(codeSink), amount);
+							this.bankClientService.transfer(account, this.bankManager.retriveAccount(codeSink), amount);
 							break;
 						}
 					} while (!accountOption.equals("5"));
 					break;
+				case "4":
+					System.out.print("Código:");
+					Long codeToRemove = Long.valueOf(sc.nextLine());
+					this.bankManager.removeAccount(codeToRemove);
+					break;
 				}
-			} while (!nextOperation.equals("4"));
+			} while (!nextOperation.equals("5"));
 		} finally {
 			sc.close();
 		}
 	}
 
 	public static void main(String[] args) {
-		new Main().execute();
+		new ClientTerminalUI().execute();
 	}
 
 }

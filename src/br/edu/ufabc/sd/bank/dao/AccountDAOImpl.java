@@ -18,6 +18,7 @@ import br.edu.ufabc.sd.bank.account.Account;
  */
 public class AccountDAOImpl implements AccountDAO {
 
+	private static final String FILE_SUFFIX = ".ser";
 	private static final String BASE_DIR = "accounts/";
 
 	@Override
@@ -26,7 +27,7 @@ public class AccountDAOImpl implements AccountDAO {
 			throw new Exception("Não é permitido gravar conta em branco");
 		}
 		try (ObjectOutputStream writer = new ObjectOutputStream(
-				new FileOutputStream(BASE_DIR + account.getCode() + ".ser"))) {
+				new FileOutputStream(BASE_DIR + account.getCode() + FILE_SUFFIX))) {
 			writer.writeObject(account);
 		}
 	}
@@ -34,7 +35,7 @@ public class AccountDAOImpl implements AccountDAO {
 	@Override
 	public Account find(Long code) throws Exception {
 		Account account;
-		try (ObjectInputStream reader = new ObjectInputStream(new FileInputStream(BASE_DIR + code + ".ser"))) {
+		try (ObjectInputStream reader = new ObjectInputStream(new FileInputStream(BASE_DIR + code + FILE_SUFFIX))) {
 			account = (Account) reader.readObject();
 		}
 		return account;
@@ -42,7 +43,7 @@ public class AccountDAOImpl implements AccountDAO {
 
 	@Override
 	public void remove(Long code) throws Exception {
-		new File(BASE_DIR + code).delete();
+		new File(BASE_DIR + code + FILE_SUFFIX).delete();
 	}
 
 	@Override

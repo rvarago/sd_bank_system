@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 
 import br.edu.ufabc.sd.bank.account.Account;
 
+/**
+ * Implementação de {@link BankClientService}.
+ *
+ * @author rvarago
+ */
 public class BankClientServiceImpl implements BankClientService {
 
 	@Override
