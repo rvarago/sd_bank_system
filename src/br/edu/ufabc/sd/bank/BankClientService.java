@@ -2,6 +2,8 @@ package br.edu.ufabc.sd.bank;
 
 import java.math.BigDecimal;
 
+import br.edu.ufabc.sd.bank.account.Account;
+
 /**
  * @author rvarago
  */

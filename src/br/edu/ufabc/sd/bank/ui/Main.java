@@ -1,7 +1,12 @@
-package br.edu.ufabc.sd.bank;
+package br.edu.ufabc.sd.bank.ui;
 
 import java.math.BigDecimal;
 import java.util.Scanner;
+
+import br.edu.ufabc.sd.bank.Bank;
+import br.edu.ufabc.sd.bank.BankClientService;
+import br.edu.ufabc.sd.bank.BankClientServiceImpl;
+import br.edu.ufabc.sd.bank.account.Account;
 
 public class Main {
 

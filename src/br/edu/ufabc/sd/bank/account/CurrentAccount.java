@@ -1,4 +1,4 @@
-package br.edu.ufabc.sd.bank;
+package br.edu.ufabc.sd.bank.account;
 
 import java.math.BigDecimal;
 

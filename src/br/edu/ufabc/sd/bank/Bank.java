@@ -5,6 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import br.edu.ufabc.sd.bank.account.Account;
+import br.edu.ufabc.sd.bank.account.CurrentAccount;
+
+/**
+ * @author rvarago
+ */
 public class Bank {
 	private static Long accountCodeGenerator = Long.valueOf(1);
 
