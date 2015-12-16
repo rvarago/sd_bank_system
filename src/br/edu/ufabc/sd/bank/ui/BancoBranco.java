@@ -23,13 +23,13 @@ import br.edu.ufabc.sd.bank.dao.AccountAzulDAOImpl;
 import br.edu.ufabc.sd.bank.dao.AccountBrancoDAO;
 import br.edu.ufabc.sd.bank.dao.AccountBrancoDAOImpl;
 
-import javax.swing.SwingConstants;
+import javax.swing.SwingConstants; 
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
 
-public class BancoAzul {
+public class BancoBranco {
 
 	//GUI
 	protected JFrame frame;
@@ -41,12 +41,12 @@ public class BancoAzul {
 	
 	//BackEnd
 	private BankClientService bankClientService;
-	private AccountAzulDAO accountAzulDAO;
-	private BankAzulManager bankAzulManager;
+	private AccountBrancoDAO accountBrancoDAO;
+	private BankBrancoManager bankBrancoManager;
 	private Account account;
 	
 	//Banco Branco = 1
-	private static final int COD_BANCO = 2;
+	private static final int COD_BANCO = 1;
 	private JTextField textValorTransfer;
 
 	/**
@@ -57,7 +57,7 @@ public class BancoAzul {
 			@Override
 			public void run() {
 				try {
-					BancoAzul window = new BancoAzul(1);
+					BancoBranco window = new BancoBranco(1);
 					window.frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -67,7 +67,7 @@ public class BancoAzul {
 	}
 	
 	private void reload(){
-		account = bankAzulManager.retriveAccount(account.getCode());
+		account = bankBrancoManager.retriveAccount(account.getCode());
 		lblSaldo.setText(account.getBalance().toString());
 		textValorSaque.setText("0.00");
 		textValorDeposito.setText("0.00");
@@ -80,25 +80,25 @@ public class BancoAzul {
 		BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(valor));
 		
 		if(bancoDestino == COD_BANCO){
-			destino = bankAzulManager.retriveAccount(contaDestino);
-			if(destino == null){
-				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
-			}else{
-				bankAzulManager.transfer(origem.getCode(), destino.getCode(), amount);
-				reload();
-				JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
-			}
-		}else{
-			AccountBrancoDAO accountBrancoDAO = new AccountBrancoDAOImpl();
-			BankBrancoManager bankBrancoManager = new BankBrancoManager(bankClientService, accountBrancoDAO);
-			
 			destino = bankBrancoManager.retriveAccount(contaDestino);
 			if(destino == null){
 				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
 			}else{
+				bankBrancoManager.transfer(origem.getCode(), destino.getCode(), amount);
+				reload();
+				JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
+			}
+		}else{
+			AccountAzulDAO accountAzulDAO = new AccountAzulDAOImpl();
+			BankAzulManager bankAzulManager = new BankAzulManager(bankClientService, accountAzulDAO);
+			
+			destino = bankAzulManager.retriveAccount(contaDestino);
+			if(destino == null){
+				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
+			}else{
 				try{
-					bankAzulManager.withdraw(origem.getCode(), amount);
-					bankBrancoManager.deposit(destino.getCode(), amount);
+					bankBrancoManager.withdraw(origem.getCode(), amount);
+					bankAzulManager.deposit(destino.getCode(), amount);
 					
 					reload();
 					JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
@@ -114,12 +114,12 @@ public class BancoAzul {
 	/**
 	 * Create the application.
 	 */
-	public BancoAzul(long codConta) {
+	public BancoBranco(long codConta) {
 		bankClientService = new BankClientServiceImpl();
-		accountAzulDAO = new AccountAzulDAOImpl();
-		bankAzulManager = new BankAzulManager(bankClientService, accountAzulDAO);
+		accountBrancoDAO = new AccountBrancoDAOImpl();
+		bankBrancoManager = new BankBrancoManager(bankClientService, accountBrancoDAO);
 		
-		account = bankAzulManager.retriveAccount(codConta);
+		account = bankBrancoManager.retriveAccount(codConta);
 		
 		this.initialize();
 	}
@@ -133,7 +133,7 @@ public class BancoAzul {
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.frame.getContentPane().setLayout(null);
 
-		JLabel lblBancoAzul = new JLabel("BANCO AZUL");
+		JLabel lblBancoAzul = new JLabel("BANCO BRANCO");
 		lblBancoAzul.setBounds(6, 16, 208, 16);
 		this.frame.getContentPane().add(lblBancoAzul);
 
@@ -229,7 +229,7 @@ public class BancoAzul {
 				if(amount.compareTo(account.getBalance()) == 1){
 					JOptionPane.showMessageDialog(btnEfetuarSaque, "Saldo Insuficiente");
 				}else{
-					bankAzulManager.withdraw(account.getCode(), amount);
+					bankBrancoManager.withdraw(account.getCode(), amount);
 					reload();
 					JOptionPane.showMessageDialog(btnEfetuarSaque, "Saque Efetuado Com Sucesso");
 				}
@@ -256,7 +256,7 @@ public class BancoAzul {
 			public void actionPerformed(ActionEvent e) {
 				BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorDeposito.getText()));
 				
-				bankAzulManager.deposit(account.getCode(), amount);
+				bankBrancoManager.deposit(account.getCode(), amount);
 				reload();
 				JOptionPane.showMessageDialog(btnEfetuarDeposito, "Depósito Efetuado Com Sucesso");
 				

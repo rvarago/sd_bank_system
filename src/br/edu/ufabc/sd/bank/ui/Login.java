@@ -5,18 +5,42 @@ import java.awt.EventQueue;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.JButton;
+
+import br.edu.ufabc.sd.bank.BankAzulManager;
+import br.edu.ufabc.sd.bank.BankBrancoManager;
+import br.edu.ufabc.sd.bank.BankClientService;
+import br.edu.ufabc.sd.bank.BankClientServiceImpl;
+import br.edu.ufabc.sd.bank.dao.AccountAzulDAO;
+import br.edu.ufabc.sd.bank.dao.AccountAzulDAOImpl;
+import br.edu.ufabc.sd.bank.dao.AccountBrancoDAO;
+import br.edu.ufabc.sd.bank.dao.AccountBrancoDAOImpl;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class Login {
 
+	//User Interface
 	private JFrame frame;
-	private JTextField textField;
-	private JTextField textField_1;
+	private JTextField textConta;
+	private JTextField textSenha;
 	private JLabel lblConta;
 	private JLabel lblSenha;
 	private JComboBox<Object> comboBox;
 	private JLabel lblBanco_1;
+	private JButton btnEntrar;
+	
+	//Back End Interface
+	private BankClientService bankClientService;
+	private AccountAzulDAO accountAzulDAO;
+	private AccountBrancoDAO accountBrancoDAO;
+	private BankBrancoManager bankBrancoManager;
+	private BankAzulManager bankAzulManager;
+	
 
 	/**
 	 * Launch the application.
@@ -40,6 +64,47 @@ public class Login {
 	 */
 	public Login() {
 		this.initialize();
+		
+		comboBox.addItem("Selecione seu Banco");
+		comboBox.addItem("Banco Branco");
+		comboBox.addItem("Banco Azul");
+		
+		btnEntrar = new JButton("Entrar");
+		btnEntrar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				bankClientService = new BankClientServiceImpl();
+				
+				if(comboBox.getSelectedIndex() == 1){
+					accountBrancoDAO = new AccountBrancoDAOImpl();
+					bankBrancoManager = new BankBrancoManager(bankClientService, accountBrancoDAO);
+					
+					if (bankBrancoManager.retriveAccount(Long.parseLong(textConta.getText())) != null){
+						new BancoBranco(Long.parseLong(textConta.getText())).frame.setVisible(true);
+						//frame.setVisible(false);
+						frame.dispose();
+						
+					}
+					
+					
+				}else if(comboBox.getSelectedIndex() == 2){
+					accountAzulDAO = new AccountAzulDAOImpl();
+					bankAzulManager = new BankAzulManager(bankClientService, accountAzulDAO);
+					
+					if (bankAzulManager.retriveAccount(Long.parseLong(textConta.getText())) != null){
+						new BancoAzul(Long.parseLong(textConta.getText())).frame.setVisible(true);
+						//frame.setVisible(false);
+						frame.dispose();
+						
+					}
+					
+				}else{
+					JOptionPane.showMessageDialog(comboBox, "Selectione um Banco");
+				}
+			}
+		});
+		btnEntrar.setBounds(125, 182, 200, 29);
+		frame.getContentPane().add(btnEntrar);
 	}
 
 	/**
@@ -51,35 +116,35 @@ public class Login {
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.frame.getContentPane().setLayout(null);
 
-		JLabel lblBanco = new JLabel("SISTEMA BANC\u00C1RIO");
+		JLabel lblBanco = new JLabel("SISTEMA BANCÁRIO");
 		lblBanco.setHorizontalAlignment(SwingConstants.CENTER);
 		lblBanco.setBounds(0, 18, 450, 16);
 		this.frame.getContentPane().add(lblBanco);
 
-		this.textField = new JTextField();
-		this.textField.setBounds(125, 93, 106, 26);
-		this.frame.getContentPane().add(this.textField);
-		this.textField.setColumns(10);
+		this.textConta = new JTextField();
+		this.textConta.setBounds(125, 144, 106, 26);
+		this.frame.getContentPane().add(this.textConta);
+		this.textConta.setColumns(10);
 
-		this.textField_1 = new JTextField();
-		this.textField_1.setColumns(10);
-		this.textField_1.setBounds(125, 144, 200, 26);
-		this.frame.getContentPane().add(this.textField_1);
+		this.textSenha = new JTextField();
+		this.textSenha.setColumns(10);
+		this.textSenha.setBounds(243, 144, 82, 26);
+		this.frame.getContentPane().add(this.textSenha);
 
 		this.lblConta = new JLabel("Conta");
-		this.lblConta.setBounds(125, 75, 61, 16);
+		this.lblConta.setBounds(125, 126, 61, 16);
 		this.frame.getContentPane().add(this.lblConta);
 
 		this.lblSenha = new JLabel("Senha");
-		this.lblSenha.setBounds(125, 126, 61, 16);
+		this.lblSenha.setBounds(243, 126, 105, 16);
 		this.frame.getContentPane().add(this.lblSenha);
 
 		this.comboBox = new JComboBox<Object>();
-		this.comboBox.setBounds(243, 82, 78, 50);
+		this.comboBox.setBounds(125, 82, 200, 50);
 		this.frame.getContentPane().add(this.comboBox);
 
 		this.lblBanco_1 = new JLabel("Banco");
-		this.lblBanco_1.setBounds(243, 75, 61, 16);
+		this.lblBanco_1.setBounds(125, 75, 211, 16);
 		this.frame.getContentPane().add(this.lblBanco_1);
 	}
 }

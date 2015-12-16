@@ -13,12 +13,21 @@ public class BankClientServiceImpl implements BankClientService {
 
 	@Override
 	public void withdraw(Account account, BigDecimal amount) throws IllegalArgumentException {
-		account.withdraw(amount);
+		try{
+			account.withdraw(amount);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void deposit(Account account, BigDecimal amount) throws IllegalArgumentException {
-		account.deposit(amount);
+		
+		try{
+			account.deposit(amount);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Override

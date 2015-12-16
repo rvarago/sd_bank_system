@@ -16,10 +16,10 @@ import br.edu.ufabc.sd.bank.account.Account;
  * @author rvarago
  *
  */
-public class AccountDAOImpl implements AccountDAO {
+public class AccountBrancoDAOImpl implements AccountBrancoDAO {
 
 	private static final String FILE_SUFFIX = ".ser";
-	private static final String BASE_DIR = "accounts/";
+	private static final String BASE_DIR = "accounts/bancoBranco/";
 
 	@Override
 	public void persist(Account account) throws Exception {
@@ -45,8 +45,6 @@ public class AccountDAOImpl implements AccountDAO {
 	public void remove(Long code) throws Exception {
 		new File(BASE_DIR + code + FILE_SUFFIX).delete();
 	}
-	
-	
 
 	@Override
 	public Set<Account> list() throws Exception {
