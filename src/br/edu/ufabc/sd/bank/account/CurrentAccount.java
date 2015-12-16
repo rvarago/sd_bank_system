@@ -42,6 +42,7 @@ public class CurrentAccount extends Account {
 
 	@Override
 	public void transfer(Account accountSink, BigDecimal amount) throws IllegalArgumentException {
+		System.out.println("AS "+accountSink.getBalance()+" amount "+amount);
 		if (accountSink.getBalance().compareTo(amount) > 0) {
 			throw new IllegalArgumentException("Saldo Insufiente");
 		}

@@ -10,17 +10,11 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
 
-import br.edu.ufabc.sd.bank.BankAzulManager;
-import br.edu.ufabc.sd.bank.BankBrancoManager;
-import br.edu.ufabc.sd.bank.BankClientService;
-import br.edu.ufabc.sd.bank.BankClientServiceImpl;
-import br.edu.ufabc.sd.bank.dao.AccountAzulDAO;
-import br.edu.ufabc.sd.bank.dao.AccountAzulDAOImpl;
-import br.edu.ufabc.sd.bank.dao.AccountBrancoDAO;
-import br.edu.ufabc.sd.bank.dao.AccountBrancoDAOImpl;
+import br.edu.ufabc.sd.servers.BankServerService;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.rmi.Naming;
 
 public class Login {
 
@@ -34,12 +28,33 @@ public class Login {
 	private JLabel lblBanco_1;
 	private JButton btnEntrar;
 	
-	//Back End Interface
-	private BankClientService bankClientService;
-	private AccountAzulDAO accountAzulDAO;
-	private AccountBrancoDAO accountBrancoDAO;
-	private BankBrancoManager bankBrancoManager;
-	private BankAzulManager bankAzulManager;
+	
+	//RMI Interface
+	private BankServerService bancoBrancoService;
+	private BankServerService bancoAzulService;
+	private final String BANCO_BRANCO_URL = "rmi://localhost/bancoBranco";
+	private final String BANCO_AZUL_URL = "rmi://localhost/bancoAzul";
+	
+	
+	
+	public void connectHandler() throws Exception {
+		try{
+			this.bancoBrancoService = (BankServerService) Naming.lookup(this.BANCO_BRANCO_URL);
+			this.bancoAzulService = (BankServerService) Naming.lookup(this.BANCO_AZUL_URL);
+		}catch (Exception e) {
+			throw new Exception("Não foi possível conectar ao servidor");
+		}
+	}
+	
+	public void disconnectHandler() throws Exception {
+		try {
+			Naming.unbind(this.BANCO_BRANCO_URL);
+			Naming.unbind(this.BANCO_AZUL_URL);
+			System.out.println("Desconectado do servidor");
+		} catch (Exception e) {
+			throw new Exception("Não foi possível desconectar do servidor");
+		}
+	}
 	
 
 	/**
@@ -70,34 +85,37 @@ public class Login {
 		comboBox.addItem("Banco Azul");
 		
 		btnEntrar = new JButton("Entrar");
-		btnEntrar.addActionListener(new ActionListener() {
+		btnEntrar.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				
-				bankClientService = new BankClientServiceImpl();
-				
 				if(comboBox.getSelectedIndex() == 1){
-					accountBrancoDAO = new AccountBrancoDAOImpl();
-					bankBrancoManager = new BankBrancoManager(bankClientService, accountBrancoDAO);
-					
-					if (bankBrancoManager.retriveAccount(Long.parseLong(textConta.getText())) != null){
-						new BancoBranco(Long.parseLong(textConta.getText())).frame.setVisible(true);
-						//frame.setVisible(false);
-						frame.dispose();
+					try {
+						connectHandler();
 						
+						if (bancoBrancoService.retriveAccount(Long.parseLong(textConta.getText())) != null){
+							new BancoBranco(Long.parseLong(textConta.getText())).frame.setVisible(true);
+
+							
+							frame.dispose();
+						}
+					} catch (Exception e1) {
+						e1.printStackTrace();
 					}
-					
-					
+	
 				}else if(comboBox.getSelectedIndex() == 2){
-					accountAzulDAO = new AccountAzulDAOImpl();
-					bankAzulManager = new BankAzulManager(bankClientService, accountAzulDAO);
-					
-					if (bankAzulManager.retriveAccount(Long.parseLong(textConta.getText())) != null){
-						new BancoAzul(Long.parseLong(textConta.getText())).frame.setVisible(true);
-						//frame.setVisible(false);
-						frame.dispose();
+					try {
+						connectHandler();
 						
+						if (bancoAzulService.retriveAccount(Long.parseLong(textConta.getText())) != null){
+							new BancoAzul(Long.parseLong(textConta.getText())).frame.setVisible(true);
+							
+							
+							frame.dispose();	
+						}
+					} catch (Exception e1) {
+						e1.printStackTrace();
 					}
-					
+		
 				}else{
 					JOptionPane.showMessageDialog(comboBox, "Selectione um Banco");
 				}

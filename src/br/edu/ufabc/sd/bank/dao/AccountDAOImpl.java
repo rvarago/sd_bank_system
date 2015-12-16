@@ -19,7 +19,15 @@ import br.edu.ufabc.sd.bank.account.Account;
 public class AccountDAOImpl implements AccountDAO {
 
 	private static final String FILE_SUFFIX = ".ser";
-	private static final String BASE_DIR = "accounts/";
+	private String BASE_DIR = "accounts/";
+	
+	public AccountDAOImpl(String bankName){
+		this.BASE_DIR += bankName;
+	}
+	
+	public String getBaseDir(){
+		return this.BASE_DIR;
+	}
 
 	@Override
 	public void persist(Account account) throws Exception {

@@ -47,5 +47,7 @@ public interface AccountDAO {
 	 * @throws Exception
 	 */
 	public Set<Account> list() throws Exception;
+	
+	public String getBaseDir();
 
 }

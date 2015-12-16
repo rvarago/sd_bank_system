@@ -22,6 +22,7 @@ public class BankManager {
 
 	public BankManager(BankClientService bankClientService, AccountDAO accountDAO) {
 		this.accountDAO = accountDAO;
+		this.bankClientService = bankClientService;
 	}
 
 	public Long createAccount(String owner, BigDecimal initialBalance) {
@@ -36,6 +37,7 @@ public class BankManager {
 	}
 
 	public void withdraw(Long code, BigDecimal amount) {
+		System.out.println("chamei bankManager"+code+" "+amount);
 		try {
 			Account account = this.accountDAO.find(code);
 			this.bankClientService.withdraw(account, amount);
@@ -70,6 +72,7 @@ public class BankManager {
 		try {
 			Account accountSource = this.accountDAO.find(accountSourceCode);
 			Account accountSink = this.accountDAO.find(accountSinkCode);
+			
 			this.bankClientService.transfer(accountSource, accountSink, amount);
 			this.accountDAO.persist(accountSource);
 			this.accountDAO.persist(accountSink);

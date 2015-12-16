@@ -13,21 +13,16 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 
-import br.edu.ufabc.sd.bank.BankAzulManager;
-import br.edu.ufabc.sd.bank.BankBrancoManager;
-import br.edu.ufabc.sd.bank.BankClientService;
-import br.edu.ufabc.sd.bank.BankClientServiceImpl;
 import br.edu.ufabc.sd.bank.account.Account;
-import br.edu.ufabc.sd.bank.dao.AccountAzulDAO;
-import br.edu.ufabc.sd.bank.dao.AccountAzulDAOImpl;
-import br.edu.ufabc.sd.bank.dao.AccountBrancoDAO;
-import br.edu.ufabc.sd.bank.dao.AccountBrancoDAOImpl;
+import br.edu.ufabc.sd.servers.BankServerService;
 
-import javax.swing.SwingConstants; 
+import javax.swing.SwingConstants;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
 
 public class BancoBranco {
 
@@ -39,15 +34,37 @@ public class BancoBranco {
 	private JTextField textValorDeposito;
 	private JLabel lblSaldo;
 	
-	//BackEnd
-	private BankClientService bankClientService;
-	private AccountBrancoDAO accountBrancoDAO;
-	private BankBrancoManager bankBrancoManager;
 	private Account account;
 	
+	//RMI Interface
+	private BankServerService bancoBrancoService;
+	private BankServerService bancoAzulService;
+	private final String BANCO_BRANCO_URL = "rmi://localhost/bancoBranco";
+	private final String BANCO_AZUL_URL = "rmi://localhost/bancoAzul";
+	
 	//Banco Branco = 1
+	//Banco Azul = 2
 	private static final int COD_BANCO = 1;
 	private JTextField textValorTransfer;
+	
+	public void connectHandler() throws Exception {
+		try{
+			this.bancoBrancoService = (BankServerService) Naming.lookup(this.BANCO_BRANCO_URL);
+			this.bancoAzulService = (BankServerService) Naming.lookup(this.BANCO_AZUL_URL);
+		}catch (Exception e) {
+			throw new Exception("Não foi possível conectar ao servidor");
+		}
+	}
+	
+	public void disconnectHandler() throws Exception {
+		/*try {
+			Naming.unbind(this.BANCO_BRANCO_URL);
+			Naming.unbind(this.BANCO_AZUL_URL);
+			System.out.println("Desconectado do servidor");
+		} catch (Exception e) {
+			throw new Exception("Não foi possível desconectar do servidor");
+		}*/
+	}
 
 	/**
 	 * Launch the application.
@@ -66,39 +83,38 @@ public class BancoBranco {
 		});
 	}
 	
-	private void reload(){
-		account = bankBrancoManager.retriveAccount(account.getCode());
+	private void reload() throws RemoteException{
+		account = bancoBrancoService.retriveAccount(account.getCode());
 		lblSaldo.setText(account.getBalance().toString());
 		textValorSaque.setText("0.00");
 		textValorDeposito.setText("0.00");
 
 	}
 	
-	private void transfer(Long contaDestino, int bancoDestino, String valor){
+	private void transfer(Long contaDestino, int bancoDestino, String valor) throws RemoteException{
 		Account destino;
 		Account origem = this.account;
 		BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(valor));
 		
 		if(bancoDestino == COD_BANCO){
-			destino = bankBrancoManager.retriveAccount(contaDestino);
+			destino = bancoBrancoService.retriveAccount(contaDestino);
 			if(destino == null){
 				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
 			}else{
-				bankBrancoManager.transfer(origem.getCode(), destino.getCode(), amount);
+				//bancoBrancoService.transfer(origem.getCode(), destino.getCode(), amount);
+				bancoBrancoService.withdraw(origem.getCode(), amount);
+				bancoBrancoService.deposit(destino.getCode(), amount);
 				reload();
 				JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
 			}
 		}else{
-			AccountAzulDAO accountAzulDAO = new AccountAzulDAOImpl();
-			BankAzulManager bankAzulManager = new BankAzulManager(bankClientService, accountAzulDAO);
-			
-			destino = bankAzulManager.retriveAccount(contaDestino);
+			destino = bancoBrancoService.retriveAccount(contaDestino);
 			if(destino == null){
 				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
 			}else{
 				try{
-					bankBrancoManager.withdraw(origem.getCode(), amount);
-					bankAzulManager.deposit(destino.getCode(), amount);
+					bancoBrancoService.withdraw(origem.getCode(), amount);
+					bancoAzulService.deposit(destino.getCode(), amount);
 					
 					reload();
 					JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
@@ -106,20 +122,18 @@ public class BancoBranco {
 					e.printStackTrace();
 				}
 			}
-			
-			
+		
 		}
 	}
 
 	/**
 	 * Create the application.
+	 * @throws Exception 
 	 */
-	public BancoBranco(long codConta) {
-		bankClientService = new BankClientServiceImpl();
-		accountBrancoDAO = new AccountBrancoDAOImpl();
-		bankBrancoManager = new BankBrancoManager(bankClientService, accountBrancoDAO);
+	public BancoBranco(long codConta) throws Exception {
+		connectHandler();
 		
-		account = bankBrancoManager.retriveAccount(codConta);
+		account = bancoBrancoService.retriveAccount(codConta);
 		
 		this.initialize();
 	}
@@ -127,7 +141,7 @@ public class BancoBranco {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize() {
+	private void initialize(){
 		this.frame = new JFrame();
 		this.frame.setBounds(100, 100, 517, 427);
 		this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -174,15 +188,20 @@ public class BancoBranco {
 		JButton btnTransferencia = new JButton("Efetuar Transferência");
 		btnTransferencia.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				int bancoDestino = comboBox.getSelectedIndex() ;
-				reload();
-				BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorTransfer.getText()));
-				if(bancoDestino == 0){
-					JOptionPane.showMessageDialog(comboBox, "Selectione um Banco");
-				}else if(amount.compareTo(account.getBalance()) == 1){
-					JOptionPane.showMessageDialog(btnTransferencia, "Saldo Insuficiente");
-				}else{
-					transfer(Long.parseLong(textContaDestino.getText()), bancoDestino, textValorTransfer.getText());
+				try{
+					int bancoDestino = comboBox.getSelectedIndex() ;
+					BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorTransfer.getText()));
+					reload();
+					
+					if(bancoDestino == 0){
+						JOptionPane.showMessageDialog(comboBox, "Selectione um Banco");
+					}else if(amount.compareTo(account.getBalance()) == 1){
+						JOptionPane.showMessageDialog(btnTransferencia, "Saldo Insuficiente");
+					}else{
+						transfer(Long.parseLong(textContaDestino.getText()), bancoDestino, amount.toString());
+					}
+				}catch(RemoteException rm){
+					rm.printStackTrace();
 				}
 			}
 		});
@@ -224,15 +243,23 @@ public class BancoBranco {
 		JButton btnEfetuarSaque = new JButton("Efetuar Saque");
 		btnEfetuarSaque.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				reload();
-				BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorSaque.getText()));
-				if(amount.compareTo(account.getBalance()) == 1){
-					JOptionPane.showMessageDialog(btnEfetuarSaque, "Saldo Insuficiente");
-				}else{
-					bankBrancoManager.withdraw(account.getCode(), amount);
+				
+				try{
+					BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorSaque.getText()));
 					reload();
-					JOptionPane.showMessageDialog(btnEfetuarSaque, "Saque Efetuado Com Sucesso");
+					
+					if(amount.compareTo(account.getBalance()) == 1){
+						JOptionPane.showMessageDialog(btnEfetuarSaque, "Saldo Insuficiente");
+					}else{
+						System.out.println(amount);
+						bancoBrancoService.withdraw(account.getCode(), amount);
+						reload();
+						JOptionPane.showMessageDialog(btnEfetuarSaque, "Saque Efetuado Com Sucesso");
+					}
+				}catch(RemoteException rm){
+					rm.printStackTrace();
 				}
+				
 			}
 		});
 		btnEfetuarSaque.setBounds(288, 54, 144, 26);
@@ -254,12 +281,16 @@ public class BancoBranco {
 		JButton btnEfetuarDeposito = new JButton("Efetuar Depósito");
 		btnEfetuarDeposito.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorDeposito.getText()));
-				
-				bankBrancoManager.deposit(account.getCode(), amount);
-				reload();
-				JOptionPane.showMessageDialog(btnEfetuarDeposito, "Depósito Efetuado Com Sucesso");
-				
+
+				try{
+					BigDecimal amount = BigDecimal.valueOf(Double.parseDouble(textValorDeposito.getText()));
+					
+					bancoBrancoService.deposit(account.getCode(), amount);
+					reload();
+					JOptionPane.showMessageDialog(btnEfetuarDeposito, "Depósito Efetuado Com Sucesso");
+				}catch(RemoteException rm){
+					rm.printStackTrace();
+				}	
 			}
 		});
 		btnEfetuarDeposito.setBounds(288, 54, 144, 26);
@@ -276,8 +307,12 @@ public class BancoBranco {
 		
 		JButton btnAtualizar = new JButton("Atualizar");
 		btnAtualizar.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				reload();
+			public void actionPerformed(ActionEvent e) {	
+				try{
+					reload();
+				}catch(RemoteException rm){
+					rm.printStackTrace();
+				}	
 			}
 		});
 		btnAtualizar.setBounds(366, 366, 91, 29);
@@ -286,12 +321,22 @@ public class BancoBranco {
 		JButton btnSair = new JButton("Sair");
 		btnSair.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
+				try{
+					disconnectHandler();
+				}catch(Exception e1){
+					e1.printStackTrace();
+				}	
 				frame.dispose();
 			}
 		});
 		btnSair.setBounds(450, 366, 61, 29);
 		frame.getContentPane().add(btnSair);
-		reload();
+		try{
+			reload();
+		}catch(RemoteException rm){
+			rm.printStackTrace();
+		}	
 		
 		comboBox.addItem("Selecione seu Banco");
 		comboBox.addItem("Banco Branco");
