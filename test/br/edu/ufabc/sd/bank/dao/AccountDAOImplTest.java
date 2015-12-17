@@ -1,9 +1,6 @@
 package br.edu.ufabc.sd.bank.dao;
 
-import java.math.BigDecimal;
-
-import br.edu.ufabc.sd.bank.account.Account;
-import br.edu.ufabc.sd.bank.account.CurrentAccount;
+import br.edu.ufabc.sd.Controller.AccountDAOImpl;
 
 /**
  * Testes unitários de {@link AccountDAOImpl}.

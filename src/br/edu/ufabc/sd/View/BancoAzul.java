@@ -1,7 +1,8 @@
-package br.edu.ufabc.sd.bank.ui;
+package br.edu.ufabc.sd.View;
 
 import java.awt.EventQueue;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -10,11 +11,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.UIManager;
 
+import br.edu.ufabc.sd.Controller.BankServerService;
+import br.edu.ufabc.sd.Model.*;
 import br.edu.ufabc.sd.bank.account.Account;
-import br.edu.ufabc.sd.servers.BankServerService;
 
 import javax.swing.SwingConstants;
 
@@ -23,23 +23,30 @@ import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.swing.JList;
+import javax.swing.UIManager;
+import javax.swing.JScrollPane;
 
 public class BancoAzul {
 
 	//GUI
 	protected JFrame frame;
 	private JComboBox<String> comboBox;
+	private JList<String> list;
 	private JTextField textContaDestino;
 	private JTextField textValorSaque;
 	private JTextField textValorDeposito;
 	private JLabel lblSaldo;
 	
 	private Account account;
+	private Collection<Operation> operations;
 	
 	//RMI Interface
-	private BankServerService bancoBrancoService;
 	private BankServerService bancoAzulService;
-	private final String BANCO_BRANCO_URL = "rmi://localhost/bancoBranco";
 	private final String BANCO_AZUL_URL = "rmi://localhost/bancoAzul";
 	
 	//Banco Branco = 1
@@ -49,7 +56,6 @@ public class BancoAzul {
 	
 	public void connectHandler() throws Exception {
 		try{
-			this.bancoBrancoService = (BankServerService) Naming.lookup(this.BANCO_BRANCO_URL);
 			this.bancoAzulService = (BankServerService) Naming.lookup(this.BANCO_AZUL_URL);
 		}catch (Exception e) {
 			throw new Exception("Não foi possível conectar ao servidor");
@@ -85,10 +91,39 @@ public class BancoAzul {
 	
 	private void reload() throws RemoteException{
 		account = bancoAzulService.retriveAccount(account.getCode());
+		operations = bancoAzulService.retrieveOperations(account.getCode(), COD_BANCO);
+		
 		lblSaldo.setText(account.getBalance().toString());
 		textValorSaque.setText("0.00");
 		textValorDeposito.setText("0.00");
 
+		DefaultListModel<String> model = new DefaultListModel<>();
+		if(operations != null)
+	        for(Operation op : operations){
+	        	String bancoDestino, bancoOrigem;
+	        	
+	        	if(op.getSourceBankId() == 1)
+	        		bancoOrigem = "bancoBranco";
+	        	else
+	        		bancoOrigem = "bancoAzul";
+	        	
+	        	if(op.getEndBankID() == 1)
+	        		bancoDestino = "bancoBranco";
+	        	else
+	        		bancoDestino = "bancoAzul";
+	        	
+	        	SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+	        	String date = sdf.format(new Date(op.getOperationId() * 1000));
+	        	
+	        	String str = op.getType() + "\t\t" + op.getAmount()+ "\t\t" + op.getSourceAccountId() + "-" + bancoOrigem + "\t\t" + op.getEndAccountId()+ "-"
+	        			 + bancoDestino + "\t\t" + date + "\t";
+	        	System.out.println(str);
+	            model.addElement(str);
+	        }
+        
+		list.setModel(model);
+		
+		
 	}
 	
 	private void transfer(Long contaDestino, int bancoDestino, String valor) throws RemoteException{
@@ -101,26 +136,29 @@ public class BancoAzul {
 			if(destino == null){
 				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
 			}else{
-				//bancoAzulService.transfer(origem.getCode(), destino.getCode(), amount);
-				bancoAzulService.withdraw(origem.getCode(), amount);
-				bancoAzulService.deposit(destino.getCode(), amount);
+				bancoAzulService.transfer(origem.getCode(), destino.getCode(), amount);
 				reload();
 				JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
 			}
 		}else{
-			destino = bancoBrancoService.retriveAccount(contaDestino);
-			if(destino == null){
-				JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
-			}else{
-				try{
-					bancoAzulService.withdraw(origem.getCode(), amount);
-					bancoBrancoService.deposit(destino.getCode(), amount);
+			try{
+				String bancoBrancoURL = bancoAzulService.getBankURL(bancoDestino);
+				BankServerService bancoBrancoService = (BankServerService) Naming.lookup(bancoBrancoURL);
+				destino = bancoBrancoService.retriveAccount(contaDestino);
+				
+				if(destino == null){
+					JOptionPane.showMessageDialog(textValorTransfer, "Conta Não Existe");
+				}else{
 					
-					reload();
-					JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
-				}catch(Exception e){
-					e.printStackTrace();
+						bancoAzulService.withdraw(origem.getCode(), amount);
+						bancoBrancoService.deposit(destino.getCode(), amount);
+						
+						reload();
+						bancoAzulService.logTransfer(origem.getCode(), destino.getCode(), bancoDestino, amount);
+						JOptionPane.showMessageDialog(textValorTransfer, "Transferência Realizada com Sucesso!");
 				}
+			}catch(Exception e){
+				e.printStackTrace();
 			}
 		
 		}
@@ -152,21 +190,15 @@ public class BancoAzul {
 		this.frame.getContentPane().add(lblBancoAzul);
 
 		JLabel lbl1 = new JLabel("Saldo");
-		lbl1.setBounds(58, 57, 61, 16);
+		lbl1.setBounds(23, 65, 61, 16);
 		this.frame.getContentPane().add(lbl1);
 
 		lblSaldo = new JLabel("0.00");
-		lblSaldo.setBounds(131, 57, 208, 16);
+		lblSaldo.setBounds(96, 65, 208, 16);
 		this.frame.getContentPane().add(lblSaldo);
 
-		JTextPane textPane = new JTextPane();
-		textPane.setEditable(false);
-		textPane.setBackground(UIManager.getColor("CheckBox.background"));
-		textPane.setBounds(131, 85, 313, 82);
-		this.frame.getContentPane().add(textPane);
-
 		JLabel lblExtrato = new JLabel("Extrato");
-		lblExtrato.setBounds(58, 85, 61, 16);
+		lblExtrato.setBounds(23, 93, 61, 16);
 		this.frame.getContentPane().add(lblExtrato);
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
@@ -332,6 +364,16 @@ public class BancoAzul {
 		});
 		btnSair.setBounds(450, 366, 61, 29);
 		frame.getContentPane().add(btnSair);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(79, 87, 419, 83);
+		frame.getContentPane().add(scrollPane);
+		
+		list = new JList<String>();
+		list.setToolTipText("Transação - Valor - Conta Origem - Banco Origem - Conta Destino - Banco Destino - Data ");
+		scrollPane.setViewportView(list);
+		list.setBackground(UIManager.getColor("Button.background"));
+		list.setVisibleRowCount(20);
 		try{
 			reload();
 		}catch(RemoteException rm){

@@ -1,4 +1,4 @@
-package br.edu.ufabc.sd.bank;
+package br.edu.ufabc.sd.Controller;
 
 import java.math.BigDecimal;
 

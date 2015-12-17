@@ -1,11 +1,12 @@
-package br.edu.ufabc.sd.bank;
+package br.edu.ufabc.sd.Controller;
 
 import java.math.BigDecimal;
 import java.util.Collection;
 
 import br.edu.ufabc.sd.bank.account.Account;
 import br.edu.ufabc.sd.bank.account.CurrentAccount;
-import br.edu.ufabc.sd.bank.dao.AccountDAO;
+
+
 
 /**
  * Centralizador da lógica bancária.
@@ -37,7 +38,7 @@ public class BankManager {
 	}
 
 	public void withdraw(Long code, BigDecimal amount) {
-		System.out.println("chamei bankManager"+code+" "+amount);
+		
 		try {
 			Account account = this.accountDAO.find(code);
 			this.bankClientService.withdraw(account, amount);

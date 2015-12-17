@@ -1,22 +1,21 @@
-package br.edu.ufabc.sd.bank.ui;
-
-import java.math.BigDecimal;
-import java.util.Scanner;
-
-import br.edu.ufabc.sd.bank.BankClientService;
-import br.edu.ufabc.sd.bank.BankClientServiceImpl;
-import br.edu.ufabc.sd.bank.BankManager;
-import br.edu.ufabc.sd.bank.account.Account;
-
-import br.edu.ufabc.sd.bank.dao.AccountDAO;
-import br.edu.ufabc.sd.bank.dao.AccountDAOImpl;
+package br.edu.ufabc.sd.bank.dao;
+//
+//import java.math.BigDecimal;
+//import java.util.Scanner;
+//
+//import br.edu.ufabc.sd.Controller.AccountDAO;
+//import br.edu.ufabc.sd.Controller.AccountDAOImpl;
+//import br.edu.ufabc.sd.Controller.BankClientService;
+//import br.edu.ufabc.sd.Controller.BankClientServiceImpl;
+//import br.edu.ufabc.sd.Controller.BankManager;
+//import br.edu.ufabc.sd.bank.account.Account;
 
 public class ClientTerminalUI {
 
-	private BankClientService bankClientService = new BankClientServiceImpl();
+	//private BankClientService bankClientService = new BankClientServiceImpl();
 
 	private void execute() {
-		Scanner sc = null;
+		//Scanner sc = null;
 //		try {
 //			sc = new Scanner(System.in);
 //			String nextOperation = null;

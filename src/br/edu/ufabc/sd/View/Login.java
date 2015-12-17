@@ -1,4 +1,4 @@
-package br.edu.ufabc.sd.bank.ui;
+package br.edu.ufabc.sd.View;
 
 import java.awt.EventQueue;
 
@@ -10,18 +10,18 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
 
-import br.edu.ufabc.sd.servers.BankServerService;
+import br.edu.ufabc.sd.Controller.BankServerService;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.rmi.Naming;
+import javax.swing.JPasswordField;
 
 public class Login {
 
 	//User Interface
 	private JFrame frame;
 	private JTextField textConta;
-	private JTextField textSenha;
 	private JLabel lblConta;
 	private JLabel lblSenha;
 	private JComboBox<Object> comboBox;
@@ -34,6 +34,7 @@ public class Login {
 	private BankServerService bancoAzulService;
 	private final String BANCO_BRANCO_URL = "rmi://localhost/bancoBranco";
 	private final String BANCO_AZUL_URL = "rmi://localhost/bancoAzul";
+	private JPasswordField passwordField;
 	
 	
 	
@@ -123,6 +124,10 @@ public class Login {
 		});
 		btnEntrar.setBounds(125, 182, 200, 29);
 		frame.getContentPane().add(btnEntrar);
+		
+		passwordField = new JPasswordField();
+		passwordField.setBounds(243, 144, 70, 26);
+		frame.getContentPane().add(passwordField);
 	}
 
 	/**
@@ -143,11 +148,6 @@ public class Login {
 		this.textConta.setBounds(125, 144, 106, 26);
 		this.frame.getContentPane().add(this.textConta);
 		this.textConta.setColumns(10);
-
-		this.textSenha = new JTextField();
-		this.textSenha.setColumns(10);
-		this.textSenha.setBounds(243, 144, 82, 26);
-		this.frame.getContentPane().add(this.textSenha);
 
 		this.lblConta = new JLabel("Conta");
 		this.lblConta.setBounds(125, 126, 61, 16);
